@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Match History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f4f8; }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { color: #1A56A0; font-weight: 700; }
+        .badge-score { font-size: 16px; }
+        .high { background-color: #198754; }
+        .medium { background-color: #ffc107; color: #000; }
+        .low { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="card p-4">
+        <h2 class="text-center mb-4">📋 Match History</h2>
+
+        <div th:if="${results.isEmpty()}" class="text-center text-muted">
+            No matches yet. <a href="/">Try your first match!</a>
+        </div>
+
+        <div th:if="${!results.isEmpty()}">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Match Score</th>
+                        <th>Missing Skills</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="result, stat : ${results}">
+                        <td th:text="${stat.index + 1}"></td>
+                        <td>
+                            <span th:classappend="${result.matchScore >= 75} ? 'high' : (${result.matchScore >= 50} ? 'medium' : 'low')"
+                                  class="badge badge-score"
+                                  th:text="${result.matchScore} + '%'"></span>
+                        </td>
+                        <td th:text="${result.missingSkills != null and !result.missingSkills.isEmpty()} ? ${result.missingSkills} : 'None'"></td>
+                        <td th:text="${#temporals.format(result.createdAt, 'dd-MM-yyyy HH:mm')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="/" class="btn btn-primary">Back to Home ↩</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
