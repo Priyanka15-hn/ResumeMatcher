@@ -8,30 +8,60 @@
         .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .btn-primary { background-color: #1A56A0; border: none; }
         h2 { color: #1A56A0; font-weight: 700; }
+        .upload-area {
+            border: 2px dashed #1A56A0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f8fbff;
+            cursor: pointer;
+        }
+        .divider { text-align: center; color: #999; margin: 10px 0; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="container mt-5">
     <div class="card p-4">
-        <h2 class="text-center mb-4">🎯 Resume Matcher</h2>
-        <p class="text-center text-muted">Paste your resume and job description to get your match score</p>
-        <form action="/match" method="post">
+        <h2 class="text-center mb-2">🎯 AI Resume Matcher</h2>
+        <p class="text-center text-muted mb-4">Upload your resume PDF or paste text — get your match score instantly</p>
+
+        <form action="/match" method="post" enctype="multipart/form-data">
+
+            <!-- PDF Upload -->
             <div class="mb-3">
-                <label class="form-label fw-bold">Your Resume</label>
-                <textarea name="resumeText" class="form-control" rows="8" 
-                    placeholder="Paste your resume text here..."></textarea>
+                <label class="form-label fw-bold">📄 Upload Resume (PDF)</label>
+                <div class="upload-area">
+                    <input type="file" name="resumeFile" accept=".pdf"
+                           class="form-control" id="pdfUpload"/>
+                    <small class="text-muted mt-2 d-block">Upload your resume as PDF</small>
+                </div>
             </div>
+
+            <div class="divider">── OR ──</div>
+
+            <!-- Paste Text -->
             <div class="mb-3">
-                <label class="form-label fw-bold">Job Description</label>
-                <textarea name="jobDescription" class="form-control" rows="8" 
-                    placeholder="Paste the job description here..."></textarea>
+                <label class="form-label fw-bold">📝 Paste Resume Text</label>
+                <textarea name="resumeText" class="form-control" rows="6"
+                    placeholder="Paste your resume text here if you don't have a PDF..."></textarea>
             </div>
+
+            <!-- Job Description -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">💼 Job Description</label>
+                <textarea name="jobDescription" class="form-control" rows="6"
+                    placeholder="Paste the job description here..." required></textarea>
+            </div>
+
             <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-lg">Analyze Match 🚀</button>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Analyze Match 🚀
+                </button>
             </div>
         </form>
+
         <div class="text-center mt-3">
-            <a href="/history" class="text-decoration-none">View Match History</a>
+            <a href="/history" class="text-decoration-none">📋 View Match History</a>
         </div>
     </div>
 </div>

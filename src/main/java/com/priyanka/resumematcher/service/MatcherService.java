@@ -2,10 +2,13 @@ package com.priyanka.resumematcher.service;
 
 import com.priyanka.resumematcher.model.MatchResult;
 import com.priyanka.resumematcher.repository.MatchResultRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class MatcherService {
@@ -13,57 +16,53 @@ public class MatcherService {
     @Autowired
     private MatchResultRepository repository;
 
-    // Common tech keywords to match against
-    private static final List<String> TECH_KEYWORDS = Arrays.asList(
-        "java", "python", "spring", "springboot", "hibernate", "mysql",
-        "sql", "rest", "api", "html", "css", "javascript", "react",
-        "git", "maven", "docker", "linux", "oops", "jdbc", "jpa",
-        "microservices", "aws", "mongodb", "bootstrap", "thymeleaf",
-        "c", "c++", "data structures", "algorithms", "multithreading"
-    );
+    @Autowired
+    private GeminiService geminiService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public MatchResult analyzeMatch(String resumeText, String jobDescription) {
+        try {
+            // Call Gemini AI
+            String aiResponse = geminiService.analyzeWithAI(resumeText, jobDescription);
 
-        String resumeLower = resumeText.toLowerCase();
-        String jobLower = jobDescription.toLowerCase();
+            // Parse JSON response
+            JsonNode json = objectMapper.readTree(aiResponse);
 
-        // Extract keywords from job description
-        List<String> jobKeywords = new ArrayList<>();
-        for (String keyword : TECH_KEYWORDS) {
-            if (jobLower.contains(keyword)) {
-                jobKeywords.add(keyword);
-            }
+            double score = json.path("score").asDouble();
+
+            // Extract missing skills
+            List<String> missingList = new ArrayList<>();
+            json.path("missingSkills").forEach(s -> missingList.add(s.asText()));
+
+            // Extract strengths
+            List<String> strengthsList = new ArrayList<>();
+            json.path("strengths").forEach(s -> strengthsList.add(s.asText()));
+
+            String suggestion = json.path("suggestion").asText();
+
+            // Save to database
+            MatchResult result = new MatchResult();
+            result.setResumeText(resumeText);
+            result.setJobDescription(jobDescription);
+            result.setMatchScore(score);
+            result.setMissingSkills(String.join(", ", missingList));
+            result.setStrengths(String.join(", ", strengthsList));
+            result.setSuggestion(suggestion);
+
+            return repository.save(result);
+
+        } catch (Exception e) {
+            // Fallback if AI fails
+            MatchResult result = new MatchResult();
+            result.setResumeText(resumeText);
+            result.setJobDescription(jobDescription);
+            result.setMatchScore(0.0);
+            result.setMissingSkills("Error analyzing resume");
+            result.setStrengths("Please try again");
+            result.setSuggestion("Could not connect to AI service");
+            return repository.save(result);
         }
-
-        // Check which job keywords are in resume
-        List<String> matchedKeywords = new ArrayList<>();
-        List<String> missingKeywords = new ArrayList<>();
-
-        for (String keyword : jobKeywords) {
-            if (resumeLower.contains(keyword)) {
-                matchedKeywords.add(keyword);
-            } else {
-                missingKeywords.add(keyword);
-            }
-        }
-
-        // Calculate match score
-        double score = 0.0;
-        if (!jobKeywords.isEmpty()) {
-            score = ((double) matchedKeywords.size() / jobKeywords.size()) * 100;
-        }
-
-        // Round to 2 decimal places
-        score = Math.round(score * 100.0) / 100.0;
-
-        // Save to database
-        MatchResult result = new MatchResult();
-        result.setResumeText(resumeText);
-        result.setJobDescription(jobDescription);
-        result.setMatchScore(score);
-        result.setMissingSkills(String.join(", ", missingKeywords));
-
-        return repository.save(result);
     }
 
     public List<MatchResult> getAllResults() {

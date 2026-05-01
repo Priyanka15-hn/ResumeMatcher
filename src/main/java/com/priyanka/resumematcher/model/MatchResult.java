@@ -13,19 +13,21 @@ public class MatchResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String resumeText;
 
-    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String jobDescription;
 
     private Double matchScore;
 
+    @Column(length = 1000)
     private String missingSkills;
 
+    @Column(length = 1000)
     private String strengths;
 
-    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String suggestion;
 
     private LocalDateTime createdAt;
